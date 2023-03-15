@@ -7,6 +7,7 @@ from sqlalchemy import create_engine, func
 from sqlalchemy import Table, MetaData
 from flask import Flask, jsonify, request
 
+
 engine = create_engine("sqlite:///Resources/sport_caps.db")
 
 Base = automap_base()
@@ -20,6 +21,17 @@ session = Session(engine)
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 
+from flask import request
+def shutdown_server():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
+    
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    shutdown_server()
+    return 'Server shutting down...'
 @app.route("/")
 def welcome():
     return(
@@ -148,10 +160,12 @@ def team_names(name=None):
 @app.route("/api/v1.0/players/<name>")
 def player_names(name=None):
     metadata = MetaData()
+    
     Players = Table('Players', metadata, autoload=True, autoload_with=engine)
     # build a select statement to query the Players table
     select_stmt = select([
         Players.c.Player_id,
+        Players.c.Team_id,
         Players.c.Active_Players,
         Players.c.Position,
         Players.c.Base_Salary,
@@ -171,11 +185,12 @@ def player_names(name=None):
     for r in results:
         player_dict = {
             "player_id": r[0],
-            "player_name": r[1],
-            "position": r[2],
-            "base_salary": r[3],
-            "cap_hit": r[4],
-            "cap%": r[5],
+            "team_id": r[1],
+            "player_name": r[2],
+            "position": r[3],
+            "base_salary": r[4],
+            "cap_hit": r[5],
+            "cap%": r[6],
         }
         players_list.append(player_dict)
 
