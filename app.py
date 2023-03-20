@@ -28,10 +28,6 @@ def shutdown_server():
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
     
-@app.route('/shutdown', methods=['POST'])
-def shutdown():
-    shutdown_server()
-    return 'Server shutting down...'
 @app.route("/")
 def welcome():
     return(
